@@ -1,0 +1,12 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+websockets==13.0
+python-telegram-bot==21.5
+google-genai==0.3.0
+openai==1.50.0
+pyautogui==0.9.54
+mss==9.0.2
+Pillow==10.4.0
+python-dotenv==1.0.1
+pydantic==2.9.2
+pyperclip==1.9.0

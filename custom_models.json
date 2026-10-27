@@ -1,0 +1,30 @@
+{
+  "openrouter_r1": {
+    "name": "OpenRouter: DeepSeek R1 (Free)",
+    "base_url": "https://openrouter.ai/api/v1",
+    "api_key": "",
+    "model": "deepseek/deepseek-r1:free",
+    "type": "openai"
+  },
+  "openrouter_gemini": {
+    "name": "OpenRouter: Gemini 2.0 Flash (Free)",
+    "base_url": "https://openrouter.ai/api/v1",
+    "api_key": "",
+    "model": "google/gemini-2.0-flash-exp:free",
+    "type": "openai"
+  },
+  "groq_llama": {
+    "name": "Groq: Llama 3.3 70B (Fast/Free)",
+    "base_url": "https://api.groq.com/openai/v1",
+    "api_key": "",
+    "model": "llama-3.3-70b-versatile",
+    "type": "openai"
+  },
+  "siliconflow": {
+    "name": "SiliconFlow: Qwen 2.5 7B (Free)",
+    "base_url": "https://api.siliconflow.cn/v1",
+    "api_key": "",
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "type": "openai"
+  }
+}

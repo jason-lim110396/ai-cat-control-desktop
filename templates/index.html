@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐱 NekoDesk Agent - Desktop Automation Console</title>
+    <style>
+        :root {
+            --bg-base: #181825;
+            --bg-surface: #1e1e2e;
+            --bg-card: #313244;
+            --text-main: #cdd6f4;
+            --text-sub: #a6adc8;
+            --accent-pink: #f5c2e7;
+            --accent-mauve: #cba6f7;
+            --accent-green: #a6e3a1;
+            --accent-red: #f38ba8;
+            --accent-peach: #fab387;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部导航 */
+        header {
+            background: var(--bg-surface);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #313244;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--accent-pink);
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 16px;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid #45475a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .badge.working {
+            border-color: #fab387;
+            background: rgba(250, 179, 135, 0.15);
+            color: #fab387;
+            box-shadow: 0 0 12px rgba(250, 179, 135, 0.4);
+            animation: pulse-work 1.2s infinite alternate;
+        }
+
+        @keyframes pulse-work {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.04); }
+        }
+
+        .badge.active {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        /* 主体布局 */
+        main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+        }
+
+        /* 左侧桌面画板 */
+        .screen-container {
+            flex: 1.6;
+            background: #11111b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 15px;
+            user-select: none;
+        }
+
+        .screen-wrapper {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #45475a;
+        }
+
+        #screen-view {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: calc(100vh - 120px);
+            cursor: crosshair;
+        }
+
+        .screen-tip {
+            position: absolute;
+            bottom: 20px;
+            background: rgba(24, 24, 37, 0.85);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            backdrop-filter: blur(4px);
+        }
+
+        /* 右侧面板 */
+        .control-panel {
+            flex: 1;
+            background: var(--bg-surface);
+            border-left: 2px solid #313244;
+            display: flex;
+            flex-direction: column;
+            padding: 18px;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        /* 控制卡片 */
+        .card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 14px;
+            border: 1px solid #45475a;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            color: var(--accent-mauve);
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 快速控制按钮区 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        .btn-keepalive {
+            flex: 1;
+            background: #45475a;
+            color: #cdd6f4;
+        }
+
+        .btn-keepalive.active {
+            background: var(--accent-green);
+            color: #11111b;
+        }
+
+        /* 核心 Kill/Stop 按钮设计 */
+        .btn-stop {
+            flex: 1.2;
+            background: var(--accent-red);
+            color: #ffffff;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(243, 139, 168, 0.35);
+        }
+
+        .btn-stop:hover {
+            background: #ff6584;
+            box-shadow: 0 6px 16px rgba(243, 139, 168, 0.5);
+        }
+
+        /* 模型选择 */
+        select {
+            width: 100%;
+            background: #181825;
+            color: #cdd6f4;
+            border: 1px solid #585b70;
+            padding: 8px 12px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        /* 对话与指令交互 */
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: #181825;
+            border: 1px solid #585b70;
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: #cdd6f4;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-mauve);
+        }
+
+        .btn-send {
+            background: var(--accent-mauve);
+            color: #181825;
+            padding: 0 18px;
+        }
+
+        /* 日志输出窗口 */
+        .log-box {
+            background: #11111b;
+            border: 1px solid #313244;
+            border-radius: 8px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: Consolas, monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-item {
+            word-break: break-all;
+            color: #a6adc8;
+        }
+
+        .log-item:last-child {
+            color: #f9e2af;
+            font-weight: bold;
+        }
+        /* 屏幕上的点击动态光环指示器 */
+        .click-pointer {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid #f38ba8;
+            background: rgba(243, 139, 168, 0.45);
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.5);
+            animation: ripple-anim 0.8s ease-out forwards;
+            z-index: 100;
+        }
+
+        .click-pointer::after {
+            content: "🐾";
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+        }
+
+        @keyframes ripple-anim {
+            0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.9; }
+            100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+        }
+
+        /* 画面正上方浮动的极速紧急关闭悬浮条 */
+        .floating-screen-stop {
+            position: absolute;
+            top: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(24, 24, 37, 0.92);
+            padding: 8px 18px;
+            border-radius: 30px;
+            border: 2px solid #f38ba8;
+            box-shadow: 0 8px 24px rgba(243, 139, 168, 0.35);
+            z-index: 50;
+            backdrop-filter: blur(8px);
+        }
+
+        .floating-screen-stop button {
+            background: #f38ba8;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <span>(=^･ω･^=)</span>
+            <span>NekoDesk Agent</span>
+        </div>
+        <div class="status-indicators">
+            <div class="badge" id="hud-status">
+                🐾 Status: <span id="hud-text">Ready & idling</span>
+            </div>
+            <div class="badge" id="ws-status">
+                ⚪ Connecting...
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Realtime Screen View -->
+        <div class="screen-container">
+            <!-- Floating Top Abort Button -->
+            <div class="floating-screen-stop">
+                <span style="font-size: 0.85rem; color: #f5c2e7;">🐱 Monitoring / Controlling Desktop</span>
+                <button onclick="stopExecution()">🛑 Abort Control</button>
+            </div>
+
+            <div class="screen-wrapper" id="screen-wrapper">
+                <img id="screen-view" src="" alt="Waiting for screen stream..." />
+                <!-- Realtime physical cursor -->
+                <div id="live-cursor" style="position: absolute; width: 20px; height: 20px; pointer-events: none; z-index: 99; transform: translate(0, 0); transition: all 0.04s linear; display: none;">
+                    <svg viewBox="0 0 24 24" width="24" height="24" style="filter: drop-shadow(0 2px 5px rgba(0,255,136,0.8));">
+                        <path d="M5.5 3.5L19 16.5L12.5 17L16 23L13 24.5L9 18L4 22L5.5 3.5Z" fill="#00ff88" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <!-- Click ripple layer -->
+                <div id="pointer-layer" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;"></div>
+            </div>
+            <div class="screen-tip">💡 Tip: When Keep-Alive is on, cursor smoothly orbits in gentle circles</div>
+        </div>
+
+        <!-- 右侧交互面板 -->
+        <div class="control-panel">
+            <!-- Emergency Control & Keep-Alive -->
+            <div class="card">
+                <div class="card-title">🚨 Emergency Control & Keep-Alive</div>
+                <div class="btn-group">
+                    <button id="btn-kill" class="btn-stop" onclick="stopExecution()">
+                        🛑 STOP / KILLED
+                    </button>
+                    <button id="btn-keepalive" class="btn-keepalive" onclick="toggleKeepAlive()">
+                        ☕ Keep-Alive (Off)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Model Selection -->
+            <div class="card">
+                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>🧠 AI Planning Engine (Router)</span>
+                    <button onclick="openModelSettings()" style="padding:2px 8px; font-size:0.75rem; background:#45475a; border-radius:6px; cursor:pointer;" title="Add / Edit Endpoint & API Key">⚙️ Custom Endpoint</button>
+                </div>
+                <select id="model-select" onchange="changeModel(this.value)">
+                    <option value="qwen">LM Studio Local (Qwen 7B Coder / Planner)</option>
+                    <option value="gemini">Google Gemini 3.5 Flash (Vision Multimodal)</option>
+                </select>
+            </div>
+
+            <!-- Automation Task Input -->
+            <div class="card">
+                <div class="card-title">💬 Send Automation Task</div>
+                <div class="chat-input-area">
+                    <input type="text" id="task-input" placeholder="e.g. Open Edge and search today's weather..." onkeydown="if(event.key==='Enter') sendTask()" />
+                    <button class="btn-send" onclick="sendTask()">Execute</button>
+                </div>
+            </div>
+
+            <!-- Action Log Console -->
+            <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="card-title">
+                    <span>📜 Realtime Execution Logs</span>
+                    <button style="padding: 2px 6px; font-size: 0.7rem; background:#45475a;" onclick="clearLogs()">Clear</button>
+                </div>
+                <div class="log-box" id="log-box">
+                    <div class="log-item">System initialized and ready...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const wsUrl = `ws://${window.location.host}/ws`;
+        let socket = null;
+        const screenImg = document.getElementById("screen-view");
+        const logBox = document.getElementById("log-box");
+        const hudText = document.getElementById("hud-text");
+        const wsStatus = document.getElementById("ws-status");
+        const btnKeepAlive = document.getElementById("btn-keepalive");
+        const modelSelect = document.getElementById("model-select");
+
+        
+        let customModelsCache = {};
+
+        const PRESET_INFOS = {
+            "openrouter_r1": {
+                "name": "OpenRouter: DeepSeek R1 (免费)",
+                "base_url": "https://openrouter.ai/api/v1",
+                "model": "deepseek/deepseek-r1:free",
+                "link": "https://openrouter.ai/keys"
+            },
+            "openrouter_gemini": {
+                "name": "OpenRouter: Gemini 2.0 Flash (免费)",
+                "base_url": "https://openrouter.ai/api/v1",
+                "model": "google/gemini-2.0-flash-exp:free",
+                "link": "https://openrouter.ai/keys"
+            },
+            "groq_llama": {
+                "name": "Groq: Llama 3.3 70B (超高速/免费)",
+                "base_url": "https://api.groq.com/openai/v1",
+                "model": "llama-3.3-70b-versatile",
+                "link": "https://console.groq.com/keys"
+            },
+            "siliconflow": {
+                "name": "SiliconFlow: Qwen 2.5 7B (国内高速/免费)",
+                "base_url": "https://api.siliconflow.cn/v1",
+                "model": "Qwen/Qwen2.5-7B-Instruct",
+                "link": "https://cloud.siliconflow.cn/account/ak"
+            }
+        };
+
+        function openModelSettings() {
+            document.getElementById("model-modal").style.display = "flex";
+            renderSavedModelsList();
+        }
+
+        function closeModelSettings() {
+            document.getElementById("model-modal").style.display = "none";
+        }
+
+        function applyPreset(presetKey) {
+            const p = PRESET_INFOS[presetKey];
+            if (!p) return;
+            document.getElementById("cfg-id").value = presetKey;
+            document.getElementById("cfg-name").value = p.name;
+            document.getElementById("cfg-base-url").value = p.base_url;
+            document.getElementById("cfg-model").value = p.model;
+            const a = document.getElementById("cfg-key-link");
+            a.href = p.link;
+            a.textContent = "🔗 获取 " + presetKey.split("_")[0] + " API Key";
+            
+            // 如果已存在该模型，回显其已有 key
+            if (customModelsCache[presetKey]) {
+                document.getElementById("cfg-key").value = customModelsCache[presetKey].api_key || "";
+            }
+        }
+
+        function toggleKeyVisibility() {
+            const inp = document.getElementById("cfg-key");
+            inp.type = inp.type === "password" ? "text" : "password";
+        }
+
+        function saveModelConfig() {
+            const id = document.getElementById("cfg-id").value.trim().toLowerCase();
+            const name = document.getElementById("cfg-name").value.trim();
+            const base_url = document.getElementById("cfg-base-url").value.trim();
+            const api_key = document.getElementById("cfg-key").value.trim();
+            const model = document.getElementById("cfg-model").value.trim();
+
+            if (!id || !name || !base_url || !model) {
+                alert("请填写完整的 ID、名称、Base URL 与 Model ID！");
+                return;
+            }
+
+            const info = { name, base_url, api_key, model, type: "openai" };
+            customModelsCache[id] = info;
+
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: "save_custom_model",
+                    id: id,
+                    info: info
+                }));
+            }
+
+            updateModelDropdown();
+            renderSavedModelsList();
+            closeModelSettings();
+        }
+
+        function editModel(id) {
+            const m = customModelsCache[id];
+            if (!m) return;
+            document.getElementById("cfg-id").value = id;
+            document.getElementById("cfg-name").value = m.name || "";
+            document.getElementById("cfg-base-url").value = m.base_url || "";
+            document.getElementById("cfg-key").value = m.api_key || "";
+            document.getElementById("cfg-model").value = m.model || "";
+            document.getElementById("btn-del-model").style.display = "block";
+        }
+
+        function deleteCurrentModel() {
+            const id = document.getElementById("cfg-id").value.trim();
+            if (!id || !confirm("确定要删除该模型配置吗？")) return;
+            delete customModelsCache[id];
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: "delete_custom_model", id: id }));
+            }
+            updateModelDropdown();
+            renderSavedModelsList();
+            document.getElementById("btn-del-model").style.display = "none";
+        }
+
+        function renderSavedModelsList() {
+            const container = document.getElementById("saved-models-list");
+            container.innerHTML = "";
+            for (const [id, m] of Object.entries(customModelsCache)) {
+                const item = document.createElement("div");
+                item.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#181825; padding:6px 10px; border-radius:6px; font-size:0.8rem;";
+                item.innerHTML = `
+                    <div>
+                        <b style="color:#fab387;">${m.name || id}</b>
+                        <span style="color:#a6adc8; margin-left:6px; font-size:0.75rem;">(${m.model})</span>
+                    </div>
+                    <button type="button" onclick="editModel('${id}')" style="padding:2px 6px; font-size:0.7rem; background:#45475a; border-radius:4px; color:#fff; cursor:pointer;">编辑</button>
+                `;
+                container.appendChild(item);
+            }
+        }
+
+        function updateModelDropdown() {
+            const select = document.getElementById("model-select");
+            const currVal = select.value;
+            
+            // 保留默认选项
+            select.innerHTML = `
+                <option value="qwen">LM Studio 本地 (Qwen 7B Coder / 智能规划)</option>
+                <option value="gemini">Google Gemini 3.5 Flash (视觉多模态/官方API)</option>
+            `;
+
+            for (const [id, m] of Object.entries(customModelsCache)) {
+                const opt = document.createElement("option");
+                opt.value = id;
+                opt.textContent = m.name || id;
+                select.appendChild(opt);
+            }
+
+            if (currVal) select.value = currVal;
+        }
+
+function connectWS() {
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = () => {
+                wsStatus.textContent = "🟢 Live Connected";
+                wsStatus.classList.add("active");
+            };
+
+            socket.onclose = () => {
+                wsStatus.textContent = "🔴 Reconnecting...";
+                wsStatus.classList.remove("active");
+                setTimeout(connectWS, 2000);
+            };
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                // 1. Refresh screen
+                if (data.image) {
+                    screenImg.src = "data:image/jpeg;base64," + data.image;
+                }
+
+                // 2. Refresh description
+                if (data.current_desc) {
+                    hudText.textContent = data.current_desc;
+                }
+
+                // 3. Sync keep-alive
+                if (data.keep_alive !== undefined) {
+                    if (data.keep_alive) {
+                        btnKeepAlive.textContent = "☕ Keep-Alive (On)";
+                        btnKeepAlive.classList.add("active");
+                    } else {
+                        btnKeepAlive.textContent = "☕ Keep-Alive (Off)";
+                        btnKeepAlive.classList.remove("active");
+                    }
+                }
+
+                // 4. 同步自定义模型列表与当前模型
+                if (data.custom_models) {
+                    const keysOld = Object.keys(customModelsCache).join(",");
+                    const keysNew = Object.keys(data.custom_models).join(",");
+                    customModelsCache = data.custom_models;
+                    if (keysOld !== keysNew) {
+                        updateModelDropdown();
+                    }
+                }
+                if (data.active_model && modelSelect.value !== data.active_model) {
+                    modelSelect.value = data.active_model;
+                }
+
+                // 5. 实时渲染 MoveMyCursor 风格的鼠标光标位置
+                const liveCursor = document.getElementById("live-cursor");
+                if (data.cursor && data.cursor.x !== undefined && data.cursor.y !== undefined) {
+                    liveCursor.style.display = "block";
+                    liveCursor.style.left = (data.cursor.x * 100).toFixed(2) + "%";
+                    liveCursor.style.top = (data.cursor.y * 100).toFixed(2) + "%";
+                }
+
+                // 6. 渲染猫咪点击光环指示器
+                if (data.last_click && data.last_click.x !== undefined) {
+                    showClickRipple(data.last_click.x, data.last_click.y);
+                }
+
+                // 7. 处理完成/中止全局通知
+                if (data.notification && data.notification.id) {
+                    handleWebNotification(data.notification);
+                }
+
+                // 8. 处理 LLM 主动向用户提问的交互弹窗
+                if (data.pending_question && data.pending_question.id) {
+                    handleWebQuestion(data.pending_question);
+                } else {
+                    dismissWebQuestion();
+                }
+
+                // 9. 渲染日志
+                if (data.logs) {
+                    logBox.innerHTML = "";
+                    data.logs.forEach(msg => {
+                        const div = document.createElement("div");
+                        div.className = "log-item";
+                        div.textContent = msg;
+                        logBox.appendChild(div);
+                    });
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            };
+        }
+
+        // Web 端弹出提示与音效
+        let lastNotificationId = null;
+        function handleWebNotification(notif) {
+            if (notif.id === lastNotificationId) return;
+            lastNotificationId = notif.id;
+
+            // 播放 Web Audio API 提示音
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                if (notif.type === "stopped") {
+                    osc.frequency.setValueAtTime(320, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.35);
+                } else {
+                    osc.frequency.setValueAtTime(520, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.25);
+                }
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.36);
+            } catch (e) {}
+
+            // 显示漂浮 Toast 横幅
+            const toast = document.createElement("div");
+            const isStop = (notif.type === "stopped");
+            toast.style.cssText = `
+                position: fixed;
+                top: 25px;
+                right: 30px;
+                background: ${isStop ? '#311b1b' : '#1b2b2b'};
+                color: ${isStop ? '#f38ba8' : '#a6e3a1'};
+                border: 2px solid ${isStop ? '#f38ba8' : '#a6e3a1'};
+                border-radius: 10px;
+                padding: 14px 20px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+                z-index: 9999;
+                font-family: inherit;
+                max-width: 380px;
+                animation: fadeInDown 0.3s ease-out;
+            `;
+            toast.innerHTML = `
+                <div style="font-weight: bold; font-size: 1rem; margin-bottom: 4px;">${notif.title}</div>
+                <div style="font-size: 0.85rem; color: #cdd6f4;">${notif.message}</div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.4s ease';
+                setTimeout(() => toast.remove(), 400);
+            }, 4500);
+        }
+
+        // Web 端处理 LLM 疑问弹窗交互
+        let currentQuestionId = null;
+        function handleWebQuestion(q) {
+            if (q.id === currentQuestionId) return;
+            currentQuestionId = q.id;
+
+            let modal = document.getElementById("agent-question-modal");
+            if (!modal) {
+                modal = document.createElement("div");
+                modal.id = "agent-question-modal";
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0; left: 0; width: 100vw; height: 100vh;
+                    background: rgba(0,0,0,0.7);
+                    backdrop-filter: blur(5px);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                `;
+                document.body.appendChild(modal);
+            }
+
+            modal.innerHTML = `
+                <div style="background: #1e1e2e; border: 2px solid #cba6f7; border-radius: 14px; padding: 24px; width: 460px; box-shadow: 0 16px 40px rgba(0,0,0,0.8); color: #cdd6f4;">
+                    <div style="font-size: 1.15rem; font-weight: bold; color: #f5c2e7; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <span>(=｀ω´=)❓</span> <span>Cat needs clarification:</span>
+                    </div>
+                    <div style="font-size: 0.95rem; line-height: 1.5; margin-bottom: 16px; color: #f9e2af;">
+                        ${q.question}
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <input type="text" id="agent-q-input" value="${q.default || ''}" placeholder="Type your answer or instructions..." style="width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 8px; border: 1px solid #45475a; background: #313244; color: #fff; font-size: 0.95rem; outline: none;" onkeydown="if(event.key==='Enter') submitWebAnswer()" />
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+                            <button onclick="stopExecution()" style="background: #45475a; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem;">Abort Task</button>
+                            <button onclick="submitWebAnswer()" style="background: #a6e3a1; color: #11111b; font-weight: bold; padding: 8px 18px; border-radius: 8px; font-size: 0.9rem;">Confirm & Continue</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => {
+                const inp = document.getElementById("agent-q-input");
+                if (inp) inp.focus();
+            }, 100);
+        }
+
+        function dismissWebQuestion() {
+            currentQuestionId = null;
+            const modal = document.getElementById("agent-question-modal");
+            if (modal) modal.remove();
+        }
+
+        function submitWebAnswer() {
+            const inp = document.getElementById("agent-q-input");
+            const val = inp ? inp.value.trim() : "";
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: "submit_answer",
+                    answer: val
+                }));
+            }
+            dismissWebQuestion();
+        }
+
+        // Show click ripple
+        let lastRippleKey = "";
+        function showClickRipple(ratioX, ratioY) {
+            const key = `${ratioX.toFixed(3)}_${ratioY.toFixed(3)}`;
+            if (key === lastRippleKey) return;
+            lastRippleKey = key;
+
+            const pointerLayer = document.getElementById("pointer-layer");
+            const dot = document.createElement("div");
+            dot.className = "click-pointer";
+            dot.style.left = `${(ratioX * 100).toFixed(2)}%`;
+            dot.style.top = `${(ratioY * 100).toFixed(2)}%`;
+            pointerLayer.appendChild(dot);
+
+            setTimeout(() => {
+                if (dot.parentNode) dot.parentNode.removeChild(dot);
+            }, 850);
+        }
+
+        // Screen click
+        screenImg.addEventListener("click", (e) => {
+            const rect = screenImg.getBoundingClientRect();
+            const ratioX = (e.clientX - rect.left) / rect.width;
+            const ratioY = (e.clientY - rect.top) / rect.height;
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: "click",
+                    ratio_x: ratioX,
+                    ratio_y: ratioY
+                }));
+            }
+        });
+
+        // Instant STOP / KILL
+        function stopExecution() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: "stop" }));
+            }
+            hudText.textContent = "🛑 Emergency stopping...";
+        }
+
+        // Toggle Keep-Alive
+        function toggleKeepAlive() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: "toggle_keepalive" }));
+            }
+        }
+
+        // Change Model
+        function changeModel(val) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: "change_model", model: val }));
+            }
+        }
+
+        // Send Automation Task
+        function sendTask() {
+            const input = document.getElementById("task-input");
+            const text = input.value.trim();
+            if (!text) return;
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: "task", instruction: text }));
+                input.value = "";
+            }
+        }
+
+        function clearLogs() {
+            logBox.innerHTML = "";
+        }
+
+        connectWS();
+    </script>
+
+    <!-- Custom Model Modal -->
+    <div id="model-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+        <div style="background:#1e1e2e; border:1px solid #45475a; border-radius:12px; width:90%; max-width:540px; padding:20px; color:#cdd6f4; box-shadow:0 10px 30px rgba(0,0,0,0.5); max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #313244; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0; font-size:1.1rem; color:#fab387;">⚙️ Configure Custom Model & Endpoint</h3>
+                <button onclick="closeModelSettings()" style="background:transparent; border:none; color:#a6adc8; font-size:1.2rem; cursor:pointer;">✖</button>
+            </div>
+            
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:0.8rem; color:#a6adc8; margin-bottom:4px;">⚡ Quick Free Presets (Click to autofill)</label>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <button type="button" onclick="applyPreset('openrouter_r1')" style="padding:4px 8px; font-size:0.75rem; background:#313244; border:1px solid #585b70; color:#cdd6f4; border-radius:4px; cursor:pointer;">OpenRouter R1 (Free)</button>
+                    <button type="button" onclick="applyPreset('openrouter_gemini')" style="padding:4px 8px; font-size:0.75rem; background:#313244; border:1px solid #585b70; color:#cdd6f4; border-radius:4px; cursor:pointer;">OpenRouter Gemini 2.0 (Free)</button>
+                    <button type="button" onclick="applyPreset('groq_llama')" style="padding:4px 8px; font-size:0.75rem; background:#313244; border:1px solid #585b70; color:#cdd6f4; border-radius:4px; cursor:pointer;">Groq 70B (Fast/Free)</button>
+                    <button type="button" onclick="applyPreset('siliconflow')" style="padding:4px 8px; font-size:0.75rem; background:#313244; border:1px solid #585b70; color:#cdd6f4; border-radius:4px; cursor:pointer;">SiliconFlow Qwen 2.5 (Free)</button>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div>
+                    <label style="display:block; font-size:0.8rem; color:#a6adc8; margin-bottom:4px;">Unique ID (letters/underscores)</label>
+                    <input id="cfg-id" type="text" placeholder="e.g. my_openrouter" style="width:100%; padding:8px; background:#181825; border:1px solid #45475a; border-radius:6px; color:#fff;" />
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.8rem; color:#a6adc8; margin-bottom:4px;">Display Name</label>
+                    <input id="cfg-name" type="text" placeholder="e.g. OpenRouter - DeepSeek R1" style="width:100%; padding:8px; background:#181825; border:1px solid #45475a; border-radius:6px; color:#fff;" />
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.8rem; color:#a6adc8; margin-bottom:4px;">Base URL (OpenAI compatible)</label>
+                    <input id="cfg-base-url" type="text" placeholder="https://openrouter.ai/api/v1" style="width:100%; padding:8px; background:#181825; border:1px solid #45475a; border-radius:6px; color:#fff;" />
+                </div>
+                <div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <label style="font-size:0.8rem; color:#a6adc8; margin-bottom:4px;">API Key</label>
+                        <a id="cfg-key-link" href="https://openrouter.ai/keys" target="_blank" style="font-size:0.75rem; color:#89b4fa; text-decoration:none;">🔗 Get API Key</a>
+                    </div>
+                    <div style="position:relative;">
+                        <input id="cfg-key" type="password" placeholder="sk-..." style="width:100%; padding:8px; background:#181825; border:1px solid #45475a; border-radius:6px; color:#fff; padding-right:40px;" />
+                        <span onclick="toggleKeyVisibility()" style="position:absolute; right:10px; top:8px; cursor:pointer; font-size:0.9rem;">👁️</span>
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.8rem; color:#a6adc8; margin-bottom:4px;">Model ID</label>
+                    <input id="cfg-model" type="text" placeholder="e.g. deepseek/deepseek-r1:free" style="width:100%; padding:8px; background:#181825; border:1px solid #45475a; border-radius:6px; color:#fff;" />
+                </div>
+            </div>
+
+            <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" onclick="deleteCurrentModel()" id="btn-del-model" style="display:none; padding:8px 14px; background:#f38ba8; color:#181825; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Delete</button>
+                <div style="margin-left:auto; display:flex; gap:10px;">
+                    <button type="button" onclick="closeModelSettings()" style="padding:8px 14px; background:#313244; color:#cdd6f4; border:1px solid #45475a; border-radius:6px; cursor:pointer;">Cancel</button>
+                    <button type="button" onclick="saveModelConfig()" style="padding:8px 16px; background:#a6e3a1; color:#181825; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">💾 Save & Apply</button>
+                </div>
+            </div>
+
+            <div style="margin-top:18px; border-top:1px solid #313244; padding-top:10px;">
+                <label style="font-size:0.8rem; color:#a6adc8; display:block; margin-bottom:6px;">Saved Custom Models (Click to edit):</label>
+                <div id="saved-models-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

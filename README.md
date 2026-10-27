@@ -69,13 +69,14 @@ Most desktop automation tools are either **too rigid** (brittle coordinate scrip
 ## 🧠 Recommended AI Models (Vision & Local)
 
 ### 🥇 1. Best Vision Models (For accurate desktop UI button & icon detection)
-| Model | Type | Why It's Best | Recommended Setup |
+| Model | Type | Why It's Best | Recommended Setup / Model ID |
 | :--- | :--- | :--- | :--- |
-| **Google Gemini 2.5 Flash / 2.0 Flash** | Cloud API | **Top recommendation.** Blazing fast (~0.6s–0.8s), native high-resolution screen grounding, high coordinate accuracy, and free tier. | Set `GEMINI_API_KEY` in `.env` |
-| **Claude 3.7 Sonnet / 3.5 Sonnet** | Cloud API | **Gold standard.** Hybrid reasoning architecture with industry-leading OS & Computer Use multi-step navigation. | Connect via OpenRouter endpoint |
+| **Google Gemini 2.5 Flash / 2.0 Flash** | Cloud API | **Top recommendation for speed & cost.** Ultra-fast latency (~0.6s–0.8s), native high-resolution screen grounding, high coordinate accuracy, and generous free tier. | Set `GEMINI_API_KEY` in `.env`<br>ID: `gemini-2.5-flash` or `gemini-2.0-flash` |
+| **Google Gemini 2.5 Pro** | Cloud API | **Highest multimodal reasoning quality.** Exceptional understanding of intricate software menus, dense code, and complex layouts. | Set `GEMINI_MODEL=gemini-2.5-pro` in `.env` |
+| **Claude 3.7 Sonnet** *(Anthropic)* | Cloud API | **Gold standard for OS navigation.** Next-gen hybrid reasoning with industry-leading native Computer Use and multi-step desktop problem solving. | Connect via OpenRouter endpoint<br>ID: `anthropic/claude-3.7-sonnet` |
 | **ByteDance UI-TARS (7B / 72B)** | Local or Cloud | **Dedicated GUI Agent model.** Specifically pre-trained on OS mouse clicks, keyboard hotkeys, and app interfaces. | Run via Ollama / vLLM / HuggingFace |
 | **Qwen 2.5 VL (7B / 72B)** | Local or Cloud | Top-tier open-weights Vision Language Model for desktop grounding, icon localization, and OCR. | Run via Ollama / vLLM / OpenRouter |
-| **OpenAI GPT-4o / GPT-4.5** | Cloud API | Excellent screen reading, spatial understanding, and robust structured JSON actions. | Connect via OpenRouter or custom endpoint |
+| **OpenAI GPT-4o / GPT-4.5** | Cloud API | High spatial precision, robust structured JSON actions, and reliable screen OCR. | Connect via OpenRouter or custom endpoint |
 
 ### 💻 2. Best 100% Free & Local Models (No API keys or internet needed)
 Run completely private on your own GPU/CPU using [LM Studio](https://lmstudio.ai/) or [Ollama](https://ollama.ai/):

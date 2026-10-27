@@ -54,15 +54,19 @@ If you find this project helpful or want to support ongoing production engineeri
 ### 🥇 1. Best Vision Models (For accurate desktop UI button & icon detection)
 | Model | Type | Why It's Best | Recommended Setup |
 | :--- | :--- | :--- | :--- |
-| **Google Gemini 2.0 Flash / 1.5 Flash** | Cloud API | **Top recommendation.** Ultra-fast latency (~0.8s), native high-resolution screen grounding, and generous free tier. | Set `GEMINI_API_KEY` in `.env` |
-| **Qwen 2.5 VL 7B / 72B** | Local or Cloud | State-of-the-art open-weights Vision Language Model for GUI computer-use and coordinate clicks. | Run via Ollama / vLLM / OpenRouter |
-| **Claude 3.5 Sonnet** | Cloud API | Industry benchmark for computer-use reasoning and multi-step UI navigation. | Connect via OpenRouter endpoint |
+| **Google Gemini 2.5 Flash / 2.0 Flash** | Cloud API | **Top recommendation.** Blazing fast (~0.6s–0.8s), native high-resolution screen grounding, high coordinate accuracy, and free tier. | Set `GEMINI_API_KEY` in `.env` |
+| **Claude 3.7 Sonnet / 3.5 Sonnet** | Cloud API | **Gold standard.** Hybrid reasoning architecture with industry-leading OS & Computer Use multi-step navigation. | Connect via OpenRouter endpoint |
+| **ByteDance UI-TARS (7B / 72B)** | Local or Cloud | **Dedicated GUI Agent model.** Specifically pre-trained on OS mouse clicks, keyboard hotkeys, and app interfaces. | Run via Ollama / vLLM / HuggingFace |
+| **Qwen 2.5 VL (7B / 72B)** | Local or Cloud | Top-tier open-weights Vision Language Model for desktop grounding, icon localization, and OCR. | Run via Ollama / vLLM / OpenRouter |
+| **OpenAI GPT-4o / GPT-4.5** | Cloud API | Excellent screen reading, spatial understanding, and robust structured JSON actions. | Connect via OpenRouter or custom endpoint |
 
 ### 💻 2. Best 100% Free & Local Models (No API keys or internet needed)
 Run completely private on your own GPU/CPU using [LM Studio](https://lmstudio.ai/) or [Ollama](https://ollama.ai/):
 - **`qwen2.5-coder-7b-instruct`** (Default Recommended): Superb structured JSON generation, keyboard shortcuts, and desktop command planning.
-- **`qwen2.5-3b-instruct`**: Extremely lightweight (~2GB VRAM), runs smoothly on any laptop CPU.
-- **`deepseek-r1-distill-qwen-7b`**: Excellent step-by-step reasoning for complex automated workflows.
+- **`deepseek-r1-distill-qwen-7b` / `14b`**: Deep chain-of-thought reasoning to resolve tricky multi-window workflows.
+- **`llama-3.2-11b-vision-instruct`**: Open local vision model capable of analyzing screenshots directly on an 8GB+ VRAM GPU.
+- **`janus-pro-7b`**: Excellent open multimodal visual perception and layout localization.
+- **`qwen2.5-3b-instruct`**: Ultra-lightweight (~2GB VRAM), runs super smoothly on any standard laptop CPU.
 
 ---
 

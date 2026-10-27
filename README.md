@@ -25,6 +25,23 @@ If you find this project helpful or want to support ongoing production engineeri
 
 ---
 
+## 🤔 Why Do You Need This?
+
+Most desktop automation tools are either **too rigid** (brittle coordinate scripts that break if an icon moves) or **invisible background utilities** that leave you guessing what your PC is doing. **NekoDesk solves both problems with two essential pillars:**
+
+### 1. 🤖 Remote Desktop Control Powered by LLMs
+- **Natural Language PC Control**: No need to write complex macros or code. Just type *"Open Edge, search for the latest tech news, and summarize it in Notepad"* — your chosen LLM (Gemini 2.5, Claude 3.7, or local Qwen) visually analyzes your desktop, locates buttons, and executes clicks and keystrokes automatically.
+- **Control from Anywhere**: Use the real-time **Web Console** (`http://localhost:8000`) or the integrated **Telegram Bot** to instruct and monitor your desktop from your phone, tablet, or another laptop across the room or on the go.
+- **Live Visual Feedback**: Watch mouse positions, click ripple animations, and task progress in real time through the low-latency WebSocket desktop stream.
+
+### 2. ☕ Intelligent Mouse Jiggler & Anti-Sleep Protection
+- **Keep Your PC Awake Seamlessly**: Running large file downloads, AI model inference, long renders, or software builds? NekoDesk prevents Windows from locking, sleeping, or triggering screensavers.
+- **Polite Human Detection (Zero Fighting)**: Traditional jigglers fight your hand when you try to use the mouse. NekoDesk detects physical mouse movement instantly and **auto-pauses for 10 seconds**, completely yielding control back to you.
+- **Native OS-Level Reliability**: Leverages Windows kernel `SetThreadExecutionState` alongside natural, gentle circular cursor micro-orbits that look authentic and prevent idle timeouts without disturbing your open windows.
+- **Instant Desktop Toggles**: Turn anti-sleep on/off with a single click on the cute floating desktop Cat HUD—no need to dig through menus or command lines.
+
+---
+
 ## ✨ Features
 
 - 🐾 **Real Animated Desktop Cat HUD**:

@@ -146,6 +146,30 @@ python main.py
 - **Monitor Realtime Stream**: Watch your desktop live stream with visual click circles and real mouse pointer positions.
 - **Add Custom Endpoints**: Click `⚙️ Custom Endpoint` to easily connect Groq, OpenRouter, or SiliconFlow with one click.
 
+### 3. 🌐 Remote Access from Phone, Tablet, or External Networks
+You can securely monitor and remote-control your PC from your smartphone, iPad, or any device outside your home Wi-Fi using tunnels:
+
+#### Option A: Cloudflare Tunnel (Free, Fast & No Account Required)
+Install [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/) and run:
+```bash
+cloudflared tunnel --url http://localhost:8000
+```
+- Cloudflare will output a public HTTPS URL (e.g. `https://random-subdomain.trycloudflare.com`).
+- Open this URL on your phone's browser anywhere in the world to view the live desktop stream, jiggle mouse, or execute AI tasks!
+- Full WebSocket streaming support out of the box with zero port-forwarding.
+
+#### Option B: ngrok (Popular & Quick)
+Install [ngrok](https://ngrok.com/) and run:
+```bash
+ngrok http 8000
+```
+- Copy the generated `https://xxxx.ngrok-free.app` URL and open it on your mobile device.
+
+#### Option C: Same Wi-Fi / Local LAN
+If your phone is connected to the same Wi-Fi router as your PC:
+1. Find your PC's local IP address (`ipconfig` on Windows, e.g. `192.168.1.100`).
+2. Open `http://192.168.1.100:8000` in your phone's browser.
+
 ---
 
 ## 📂 Project Architecture

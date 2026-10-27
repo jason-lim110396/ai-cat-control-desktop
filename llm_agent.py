@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-llm_agent.py - 双引擎 LLM 规划与自动化执行器 (LM Studio Qwen 3B + Gemini Flash)
-支持实时 Stop / Cancel 强掐断
+llm_agent.py -  LLM  (LM Studio Qwen 3B + Gemini Flash)
+ Stop / Cancel 
 """
 import json
 import re
@@ -16,60 +16,60 @@ from config import settings, state
 from controller import controller
 from cat_overlay import cat_hud
 
-# 系统规划提示词：严格按部就班执行，遇到不明确/需要用户确认或选特定视频时，可发起 ask_user 询问
-AGENT_SYSTEM_PROMPT = """你是一个 Windows 桌面纯键盘鼠标自动化执行助手。
-你每次只能输出且必须输出单行标准 JSON，格式为：
-{"thought": "当前要做什么", "action": "hotkey"|"type"|"press"|"wait"|"ask_user"|"done", "param": "参数"}
+# ：，/， ask_user 
+AGENT_SYSTEM_PROMPT = """ Windows 。
+ JSON，：
+{"thought": "", "action": "hotkey"|"type"|"press"|"wait"|"ask_user"|"done", "param": ""}
 
-动作定义：
-- "hotkey": 组合键，如 "win+r"、"ctrl+l"、"ctrl+t"、"enter"
-- "type": 输入文本或网址
-- "press": 单键，如 "enter"、"esc"、"tab"、"down"
-- "wait": 等待秒数，如 "3"
-- "ask_user": 当你不明白用户意图、或者需要用户确认目标视频/选项时，向用户提问输入，param 为提问文字
-- "done": 完成任务，param 为完成提示
+：
+- "hotkey": ， "win+r"、"ctrl+l"、"ctrl+t"、"enter"
+- "type": 
+- "press": ， "enter"、"esc"、"tab"、"down"
+- "wait": ， "3"
+- "ask_user": 、/，，param 
+- "done": ，param 
 
-标准流程规范：
-1. 启动浏览器（更稳妥的方式是 win+r 输入 firefox 或 chrome）：
-   {"thought": "打开运行对话框", "action": "hotkey", "param": "win+r"}
-2. 输入浏览器并启动：
-   {"thought": "输入浏览器并访问目标网址", "action": "type", "param": "firefox https://www.youtube.com/results?search_query=wei+hong"}
-3. 回车打开：
-   {"thought": "按下回车打开页面", "action": "press", "param": "enter"}
-4. 等待加载：
-   {"thought": "等待网页加载", "action": "wait", "param": "4"}
-5. 寻找并打开第 3 个视频：
-   可以通过连续 tab 键或连续向下按键滚动定位到视频，然后按 enter 打开！
+：
+1. （ win+r  firefox  chrome）：
+   {"thought": "", "action": "hotkey", "param": "win+r"}
+2. ：
+   {"thought": "", "action": "type", "param": "firefox https://www.youtube.com/results?search_query=wei+hong"}
+3. ：
+   {"thought": "", "action": "press", "param": "enter"}
+4. ：
+   {"thought": "", "action": "wait", "param": "4"}
+5.  3 ：
+    tab ， enter ！
 
-只返回合法的单行 JSON，禁止任何解释！
+ JSON，！
 """
 
 class LLMAgentRunner:
     def __init__(self):
-        # 1. 初始化 LM Studio (OpenAI Compatible) 客户端
+        # 1.  LM Studio (OpenAI Compatible) 
         self.lm_client = AsyncOpenAI(
             base_url=settings.LM_STUDIO_BASE_URL,
             api_key=settings.LM_STUDIO_API_KEY,
             timeout=30.0,
         )
 
-        # 2. 初始化 Gemini 客户端
+        # 2.  Gemini 
         self.gemini_client = None
         if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "YOUR_GEMINI_API_KEY_HERE":
             try:
                 self.gemini_client = genai.Client(api_key=settings.GEMINI_API_KEY)
             except Exception as e:
-                state.add_log(f"⚠️ Gemini 初始化提示: {e}")
+                state.add_log(f"⚠️ Gemini : {e}")
 
     def clean_json_response(self, text: str) -> Dict[str, Any]:
-        """清洗并解析 LLM 返回的 JSON 格式"""
+        """ LLM  JSON """
         text = text.strip()
-        # 去除 markdown 代码块
+        #  markdown 
         if text.startswith("```"):
             text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
             text = re.sub(r"\s*```$", "", text)
         
-        # 尝试寻找第一对 { }
+        #  { }
         match = re.search(r"\{.*\}", text, re.DOTALL)
         if match:
             text = match.group(0)
@@ -77,30 +77,30 @@ class LLMAgentRunner:
         try:
             return json.loads(text)
         except Exception:
-            # 容错处理
+            # 
             return {
-                "thought": f"直接回答: {text[:60]}...",
+                "thought": f": {text[:60]}...",
                 "action": "done",
                 "message": text
             }
 
     async def unload_all_models(self):
         """
-        自动化任务完成或中断后，调用 LM Studio REST API 卸载全部已加载的模型实例，
-        彻底释放显存 (VRAM) 与系统内存 (RAM)！
+        ， LM Studio REST API ，
+         (VRAM)  (RAM)！
         """
         import urllib.request
         loop = asyncio.get_running_loop()
 
         def _do_unload():
             try:
-                # 1. 查询当前加载的模型列表
+                # 1. 
                 req = urllib.request.Request("http://localhost:1234/api/v0/models")
                 with urllib.request.urlopen(req, timeout=3.0) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
                     loaded = [m.get("id") for m in data.get("data", []) if m.get("state") == "loaded"]
 
-                # 2. 逐一调用 v1 models/unload 卸载
+                # 2.  v1 models/unload 
                 unloaded_names = []
                 for model_id in loaded:
                     if not model_id:
@@ -116,20 +116,20 @@ class LLMAgentRunner:
                         with urllib.request.urlopen(unload_req, timeout=4.0):
                             unloaded_names.append(model_id)
                     except Exception as ue:
-                        state.add_log(f"⚠️ 释放模型 {model_id} 异常: {ue}")
+                        state.add_log(f"⚠️  {model_id} : {ue}")
 
                 if unloaded_names:
-                    state.add_log(f"🧹 已释放 LM Studio 显存与模型: {', '.join(unloaded_names)}")
+                    state.add_log(f"🧹  LM Studio : {', '.join(unloaded_names)}")
                 else:
-                    state.add_log("🧹 LM Studio 模型已处于释放状态，显存清洁")
+                    state.add_log("🧹 LM Studio ，")
             except Exception as e:
-                # LM Studio 可能未开启 REST 或处于离线状态
+                # LM Studio  REST 
                 pass
 
         await loop.run_in_executor(None, _do_unload)
 
     async def plan_task_with_qwen(self, task_instruction: str) -> List[Dict[str, Any]]:
-        """使用本地 LLM 将用户的多步骤复合任务拆解为连贯、可执行的完整按键与导航流"""
+        """ LLM 、"""
         prompt = f"""You are an expert Windows desktop workflow engine.
 Convert the user request into a complete, executable sequence of keyboard and navigation actions.
 
@@ -156,7 +156,7 @@ Comprehensive Flow Rules:
      press "tab" -> wait "1" -> press "tab" -> wait "1" -> press "tab" -> wait "1" -> press "enter"
      OR scroll down: press "down" (several times) -> press "enter"
 3. Needing user confirmation / unclear intent:
-   - action "ask_user", param: "请问你想播放具体哪部视频？"
+   - action "ask_user", param: "？"
 
 Format MUST be a valid JSON array of action objects. Each object should have keys "thought", "action", and "param":
 Example:
@@ -175,7 +175,7 @@ User Request: {task_instruction}
 Output ONLY the JSON array:"""
 
         messages = [{"role": "user", "content": prompt}]
-        state.add_log(f"🧠 [LM Studio] 正在分析并编排全套工作流 (Flow)...")
+        state.add_log(f"🧠 [LM Studio]  (Flow)...")
 
         model_to_use = settings.QWEN_MODEL_NAME
         try:
@@ -197,7 +197,7 @@ Output ONLY the JSON array:"""
             )
             content = resp.choices[0].message.content or ""
 
-        # 清洗并解析 JSON 数组
+        #  JSON 
         content = content.strip()
         if content.startswith("```"):
             content = re.sub(r"^```(?:json)?\s*", "", content, flags=re.IGNORECASE)
@@ -212,53 +212,53 @@ Output ONLY the JSON array:"""
                         if not isinstance(item, dict):
                             continue
                         act = str(item.get("action", "")).lower()
-                        # 1. 如果模型输出了高层抽象操作，智能编译为低层执行动作
+                        # 1. ，
                         if act in ("open", "launch"):
                             app = item.get("application") or item.get("app") or item.get("param", "")
                             url = item.get("url", "")
                             if url or "http" in str(app):
                                 target = url or app
-                                normalized_plan.append({"action": "open_url", "param": target, "thought": f"打开网址: {target}"})
+                                normalized_plan.append({"action": "open_url", "param": target, "thought": f": {target}"})
                             else:
-                                normalized_plan.append({"action": "open_url", "param": "https://www.google.com", "thought": f"启动浏览器: {app}"})
-                            normalized_plan.append({"action": "wait", "param": "3", "thought": "等待浏览器窗口加载"})
+                                normalized_plan.append({"action": "open_url", "param": "https://www.google.com", "thought": f": {app}"})
+                            normalized_plan.append({"action": "wait", "param": "3", "thought": ""})
 
                         elif act == "search":
                             query = item.get("query") or item.get("param", "")
-                            # 如果是找视频或频道，优先直接导向 YouTube 搜索
+                            # ， YouTube 
                             yt_url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
-                            normalized_plan.append({"action": "open_url", "param": yt_url, "thought": f"在 YouTube 搜索: {query}"})
-                            normalized_plan.append({"action": "wait", "param": "4", "thought": "等待搜索结果渲染完成"})
+                            normalized_plan.append({"action": "open_url", "param": yt_url, "thought": f" YouTube : {query}"})
+                            normalized_plan.append({"action": "wait", "param": "4", "thought": ""})
 
                         elif act in ("select", "choose", "click_video"):
                             target = str(item.get("item") or item.get("param", "")).lower()
-                            # 提取第几部视频 (默认第3部)
+                            #  (3)
                             down_times = 3
-                            if "1st" in target or "first" in target or "第1" in target:
+                            if "1st" in target or "first" in target or "1" in target:
                                 down_times = 1
-                            elif "2nd" in target or "second" in target or "第2" in target:
+                            elif "2nd" in target or "second" in target or "2" in target:
                                 down_times = 2
-                            elif "3rd" in target or "third" in target or "第3" in target:
+                            elif "3rd" in target or "third" in target or "3" in target:
                                 down_times = 3
-                            elif "4th" in target or "fourth" in target or "第4" in target:
+                            elif "4th" in target or "fourth" in target or "4" in target:
                                 down_times = 4
 
-                            # 下移定位到指定视频条目
+                            # 
                             for idx in range(down_times):
-                                normalized_plan.append({"action": "press", "param": "down", "thought": f"向下移动光标选择第 {idx+1} 个项目"})
-                                normalized_plan.append({"action": "wait", "param": "0.5", "thought": "等待光标聚焦"})
-                            normalized_plan.append({"action": "press", "param": "enter", "thought": f"按回车打开第 {down_times} 个视频"})
-                            normalized_plan.append({"action": "wait", "param": "3", "thought": "等待视频缓冲播放"})
+                                normalized_plan.append({"action": "press", "param": "down", "thought": f" {idx+1} "})
+                                normalized_plan.append({"action": "wait", "param": "0.5", "thought": ""})
+                            normalized_plan.append({"action": "press", "param": "enter", "thought": f" {down_times} "})
+                            normalized_plan.append({"action": "wait", "param": "3", "thought": ""})
 
                         else:
-                            # 标准底层动作
+                            # 
                             param = item.get("param") or item.get(act, "")
-                            thought = item.get("thought", f"执行 {act}")
+                            thought = item.get("thought", f" {act}")
                             normalized_plan.append({"action": act, "param": param, "thought": thought})
 
-                    # 如果最后没有 done，自动附加完成动作
+                    #  done，
                     if normalized_plan and normalized_plan[-1]["action"] != "done":
-                        normalized_plan.append({"action": "done", "param": "任务已顺利完成全部操作！", "thought": "全部流程已顺利完成"})
+                        normalized_plan.append({"action": "done", "param": "！", "thought": ""})
 
                     if normalized_plan:
                         return normalized_plan
@@ -267,33 +267,33 @@ Output ONLY the JSON array:"""
         return []
 
     async def call_lm_studio_qwen(self, task_instruction: str, history_logs: List[str]) -> Dict[str, Any]:
-        """调用本地 LM Studio Qwen 3B 进行快速指令解析与规划"""
-        # 如果尚未生成任务规划，先生成完整规划
+        """ LM Studio Qwen 3B """
+        # ，
         if self._cached_plan is None:
             self._cached_plan = await self.plan_task_with_qwen(task_instruction)
             self._plan_step_idx = 0
 
-        # 如果有缓存规划且尚未执行完，按部就班取出下一步执行
+        # ，
         if self._cached_plan and self._plan_step_idx < len(self._cached_plan):
             step_action = self._cached_plan[self._plan_step_idx]
             self._plan_step_idx += 1
             return step_action
 
-        # 默认回退单步规划
-        user_prompt = f"""当前用户任务: {task_instruction}
-已经完成的历史步骤:
-{chr(10).join(history_logs) if history_logs else '(无，这是第 1 步)'}
+        # 
+        user_prompt = f""": {task_instruction}
+:
+{chr(10).join(history_logs) if history_logs else '(， 1 )'}
 
-请判断当前应该执行哪一步，输出下一步的单行 JSON："""
+， JSON："""
 
         messages = [
             {"role": "system", "content": AGENT_SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt}
         ]
 
-        state.add_log(f"🧠 [LM Studio Qwen 3B] 思考规划中...")
+        state.add_log(f"🧠 [LM Studio Qwen 3B] ...")
         
-        # 自动尝试使用已加载的默认模型
+        # 
         model_to_use = settings.QWEN_MODEL_NAME
         try:
             resp = await self.lm_client.chat.completions.create(
@@ -319,25 +319,25 @@ Output ONLY the JSON array:"""
             raise e
 
     async def call_gemini_vision(self, task_instruction: str, history_logs: List[str]) -> Dict[str, Any]:
-        """调用 Gemini Flash (多模态) 进行屏幕视觉分析与操作"""
+        """ Gemini Flash () """
         if not self.gemini_client:
-            raise RuntimeError("Gemini API Key 未配置，请在设置中配置或切换为 LM Studio 模式！")
+            raise RuntimeError("Gemini API Key ， LM Studio ！")
 
-        state.add_log("📷 正在截屏并调用 Gemini Flash 视觉模型...")
-        # 截图压缩
+        state.add_log("📷  Gemini Flash ...")
+        # 
         img_bytes = controller.capture_screen_bytes(max_width=1024, quality=70)
         
         prompt = f"""
 {AGENT_SYSTEM_PROMPT}
 
-当前用户目标：{task_instruction}
-当前电脑屏幕截图已上传。
-前面执行记录：
+：{task_instruction}
+。
+：
 {chr(10).join(history_logs[-4:])}
 
-根据屏幕当前画面，精准识别你需要点击或操作的元素坐标(0~1000归一化坐标)，并输出下一步操作的严格 JSON：
+，(0~1000)， JSON：
 """
-        # 异步线程执行 Gemini 同步接口
+        #  Gemini 
         loop = asyncio.get_running_loop()
         def _call_gemini():
             return self.gemini_client.models.generate_content(
@@ -353,13 +353,13 @@ Output ONLY the JSON array:"""
 
 
     async def call_custom_openai_model(self, task_instruction: str, history_logs: List[str], model_id: str) -> Dict[str, Any]:
-        """通用 OpenAI 兼容端点调用器 (支持 OpenRouter, Groq, SiliconFlow, Cerebras 等)"""
+        """ OpenAI  ( OpenRouter, Groq, SiliconFlow, Cerebras )"""
         cfg = state.custom_models.get(model_id, {})
         base_url = cfg.get("base_url", "https://api.openai.com/v1")
         api_key = cfg.get("api_key") or "dummy-key"
         actual_model = cfg.get("model", "gpt-3.5-turbo")
 
-        state.add_log(f"🌐 正在调用自定义端点 [{cfg.get('name', model_id)}]: {actual_model}...")
+        state.add_log(f"🌐  [{cfg.get('name', model_id)}]: {actual_model}...")
 
         custom_client = AsyncOpenAI(
             base_url=base_url,
@@ -369,11 +369,11 @@ Output ONLY the JSON array:"""
 
         prompt = f"""{AGENT_SYSTEM_PROMPT}
 
-当前用户目标：{task_instruction}
-前面操作记录：
+：{task_instruction}
+：
 {chr(10).join(history_logs[-4:])}
 
-请给出下一步操作的严格单行 JSON："""
+ JSON："""
 
         resp = await custom_client.chat.completions.create(
             model=actual_model,
@@ -386,15 +386,15 @@ Output ONLY the JSON array:"""
 
     async def run_task(self, instruction: str) -> str:
         """
-        AI 自动化循环入口，支持随时终止与超时控制。
+        AI ，。
         """
-        # 重置中断标志与计划缓存
+        # 
         state.stop_requested = False
         state.is_agent_busy = True
         self._cached_plan = None
         self._plan_step_idx = 0
-        state.add_log(f"🚀 启动新任务: '{instruction}' (引擎: {state.active_model})")
-        cat_hud.update_status("working", f"准备执行: {instruction[:20]}")
+        state.add_log(f"🚀 : '{instruction}' (: {state.active_model})")
+        cat_hud.update_status("working", f": {instruction[:20]}")
 
         step_count = 0
         history_actions = []
@@ -403,13 +403,13 @@ Output ONLY the JSON array:"""
             while step_count < settings.MAX_AGENT_STEPS:
                 step_count += 1
 
-                # 每一轮循环首要检查是否被请求停止
+                # 
                 if state.stop_requested:
-                    raise asyncio.CancelledError("任务已被用户紧急终止！")
+                    raise asyncio.CancelledError("！")
 
-                state.add_log(f"⏳ 步骤 [{step_count}/{settings.MAX_AGENT_STEPS}] 决策中...")
+                state.add_log(f"⏳  [{step_count}/{settings.MAX_AGENT_STEPS}] ...")
 
-                # 1. 路由器决策：根据当前模型获取下一步动作
+                # 1. ：
                 try:
                     if state.active_model == "gemini":
                         action_plan = await self.call_gemini_vision(instruction, history_actions)
@@ -420,23 +420,23 @@ Output ONLY the JSON array:"""
                 except asyncio.CancelledError:
                     raise
                 except Exception as e:
-                    state.add_log(f"❌ 模型请求失败: {e}")
-                    # 如果本地 LM Studio 连不上，给用户友好提醒
+                    state.add_log(f"❌ : {e}")
+                    #  LM Studio ，
                     if "1234" in str(e):
-                        return f"连接 LM Studio 失败，请检查 LM Studio 的 Local Server 是否开启在 http://localhost:1234: {e}"
-                    return f"模型决策发生异常: {e}"
+                        return f" LM Studio ， LM Studio  Local Server  http://localhost:1234: {e}"
+                    return f": {e}"
 
-                # 再次检查停止
+                # 
                 if state.stop_requested:
-                    raise asyncio.CancelledError("任务已被用户紧急终止！")
+                    raise asyncio.CancelledError("！")
 
                 action_type = action_plan.get("action", "").lower()
                 thought = action_plan.get("thought", "")
 
-                # 2. 检查是否需要向用户弹出提问 (ask_user)
+                # 2.  (ask_user)
                 if action_type == "ask_user":
-                    question_text = str(action_plan.get("param") or thought or "请确认接下来的操作:")
-                    state.add_log(f"❓ LLM 向用户提问: {question_text}")
+                    question_text = str(action_plan.get("param") or thought or ":")
+                    state.add_log(f"❓ LLM : {question_text}")
                     cat_hud.update_status("working", f"Awaiting input: {question_text[:20]}...")
                     cat_hud.ask_user_dialog(question_text)
                     state.ask_user(question_text)
@@ -491,11 +491,11 @@ Output ONLY the JSON array:"""
             state.current_task = None
             if not state.keep_alive_enabled:
                 cat_hud.update_status("idle", "Ready & idling")
-            # 无论成功完成还是中途停止，彻底释放 LM Studio 显存与模型！
+            # ， LM Studio ！
             try:
                 await self.unload_all_models()
             except Exception as ex:
-                state.add_log(f"⚠️ 自动释放模型提示: {ex}")
+                state.add_log(f"⚠️ : {ex}")
 
 
 agent_runner = LLMAgentRunner()

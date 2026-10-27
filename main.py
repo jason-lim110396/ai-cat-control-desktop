@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-main.py - FastAPI Web 服务 + WebSocket 实时推流 + Telegram 机器人统一启动入口
-支持极速一键 Stop / Killed 正在执行的指令
+main.py - FastAPI Web  + WebSocket  + Telegram 
+ Stop / Killed 
 """
 import io
 import asyncio
@@ -28,15 +28,15 @@ from cat_overlay import cat_hud
 from controller import controller
 from llm_agent import agent_runner
 
-# 活跃的 WebSocket 连接池
+#  WebSocket 
 active_connections: Set[WebSocket] = set()
 
 
 # =========================================================================
-# 1. Telegram Bot 控制模块
+# 1. Telegram Bot 
 # =========================================================================
 def check_auth(update: Update) -> bool:
-    """验证是否是允许的 Telegram 用户"""
+    """ Telegram """
     user_id = update.effective_user.id if update.effective_user else None
     if settings.ALLOWED_CHAT_ID and user_id != settings.ALLOWED_CHAT_ID:
         return False
@@ -144,10 +144,10 @@ async def tg_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 # =========================================================================
-# 2. 屏幕流后台广播任务 (WebSocket)
+# 2.  (WebSocket)
 # =========================================================================
 async def screen_stream_broadcaster():
-    """按固定 FPS 向所有已连接的 Web 端广播 JPEG 帧与系统状态"""
+    """ FPS  Web  JPEG """
     interval = 1.0 / max(1, settings.STREAM_FPS)
     loop = asyncio.get_running_loop()
 
@@ -158,7 +158,7 @@ async def screen_stream_broadcaster():
                     None, controller.capture_screen_base64, 1280, settings.JPEG_QUALITY
                 )
 
-                # 获取当前真实光标坐标比率 (0.0~1.0)，供网页端实时显示实体鼠标光标
+                #  (0.0~1.0)，
                 cursor_pos = None
                 try:
                     cur_x, cur_y = pyautogui.position()
@@ -195,12 +195,12 @@ async def screen_stream_broadcaster():
         except asyncio.CancelledError:
             break
         except Exception as e:
-            state.add_log(f"⚠️ 屏幕推流异常: {e}")
+            state.add_log(f"⚠️ : {e}")
             await asyncio.sleep(1.0)
 
 
 # =========================================================================
-# 3. FastAPI 生命周期与路由
+# 3. FastAPI 
 # =========================================================================
 tg_app = None
 

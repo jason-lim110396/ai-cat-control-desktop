@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-config.py - NekoDesk Agent 全局配置与运行状态管理
+config.py - NekoDesk Agent 
 """
 import os
 import asyncio
 from typing import Optional, List
 from dotenv import load_dotenv
 
-# 加载 .env 环境变量文件（如果存在）
+#  .env （）
 load_dotenv()
 import json
 
@@ -20,7 +20,7 @@ def load_custom_models() -> dict:
                 return json.load(f)
         except Exception:
             pass
-    # 默认预设
+    # 
     default_models = {
         "openrouter_r1": {
             "name": "OpenRouter: DeepSeek R1 (Free)",
@@ -68,51 +68,51 @@ class Config:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 
-    # ================= 2. LM Studio (Qwen 本地引擎) 配置 =================
+    # ================= 2. LM Studio (Qwen )  =================
     LM_STUDIO_BASE_URL: str = os.getenv("LM_STUDIO_BASE_URL", "http://localhost:1234/v1")
     LM_STUDIO_API_KEY: str = os.getenv("LM_STUDIO_API_KEY", "lm-studio")
     QWEN_MODEL_NAME: str = os.getenv("QWEN_MODEL_NAME", "qwen2.5-coder-7b-instruct")
 
-    # ================= 3. Telegram Bot 配置 =================
+    # ================= 3. Telegram Bot  =================
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN_HERE")
     ALLOWED_CHAT_ID: int = int(os.getenv("ALLOWED_CHAT_ID", "123456789"))
 
-    # ================= 4. Web 远程控制服务配置 =================
+    # ================= 4. Web  =================
     WEB_HOST: str = os.getenv("WEB_HOST", "0.0.0.0")
     WEB_PORT: int = int(os.getenv("WEB_PORT", "8000"))
     STREAM_FPS: int = 2
     JPEG_QUALITY: int = 65
 
-    # ================= 5. 自动化与防休眠参数 =================
+    # ================= 5.  =================
     KEEP_ALIVE_INTERVAL: int = 30
     MAX_AGENT_STEPS: int = 15
 
 
 class RuntimeState:
     """
-    全局单例状态容器：供 Web、Telegram、Agent 与猫咪 HUD 实时共享状态
+    ： Web、Telegram、Agent  HUD 
     """
     def __init__(self):
-        # 当前激活的模型: "gemini" 或 "qwen"
+        # : "gemini"  "qwen"
         self.active_model: str = "qwen"
         self.custom_models: dict = load_custom_models()
-        # 是否开启鼠标防休眠 (Keep-Online)
+        #  (Keep-Online)
         self.keep_alive_enabled: bool = False
-        # 当前是否有 AI 自动化任务正在执行
+        #  AI 
         self.is_agent_busy: bool = False
-        # 紧急停止标志位
+        # 
         self.stop_requested: bool = False
-        # 当前正在执行的任务或动作描述
+        # 
         self.current_action_desc: str = "Ready & idling"
-        # 历史日志列表 (供 Web 前端展示)
+        #  ( Web )
         self.logs: List[str] = []
-        # 当前运行任务的 asyncio.Task 引用
+        #  asyncio.Task 
         self.current_task: Optional[asyncio.Task] = None
-        # 猫咪最近一次点击的屏幕归一化位置 (用于前端雷达波纹与真实桌面光标显示)
+        #  ()
         self.last_click: Optional[dict] = None
-        # 最新通知事件 (供 Web 前端弹窗与声音播放，包含 id, type, title, message)
+        #  ( Web ， id, type, title, message)
         self.last_notification: Optional[dict] = None
-        # 待用户回答的问题交互状态 (用于当 LLM 不确定时向用户弹出输入框询问)
+        #  ( LLM )
         self.pending_question: Optional[dict] = None
         self._user_answer_event: asyncio.Event = asyncio.Event()
         self.last_user_answer: str = ""
@@ -184,6 +184,6 @@ class RuntimeState:
         return "Stop signal sent" + (" and active task forcefully cancelled!" if killed else ".")
 
 
-# 导出全局配置与状态实例
+# 
 settings = Config()
 state = RuntimeState()

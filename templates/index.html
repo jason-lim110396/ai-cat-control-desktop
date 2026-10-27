@@ -34,7 +34,7 @@
             overflow: hidden;
         }
 
-        /* 顶部导航 */
+        /*  */
         header {
             background: var(--bg-surface);
             padding: 12px 24px;
@@ -88,7 +88,7 @@
             color: var(--accent-green);
         }
 
-        /* 主体布局 */
+        /*  */
         main {
             display: flex;
             flex: 1;
@@ -96,7 +96,7 @@
             overflow: hidden;
         }
 
-        /* 左侧桌面画板 */
+        /*  */
         .screen-container {
             flex: 1.6;
             background: #11111b;
@@ -138,7 +138,7 @@
             backdrop-filter: blur(4px);
         }
 
-        /* 右侧面板 */
+        /*  */
         .control-panel {
             flex: 1;
             background: var(--bg-surface);
@@ -150,7 +150,7 @@
             overflow-y: auto;
         }
 
-        /* 控制卡片 */
+        /*  */
         .card {
             background: var(--bg-card);
             border-radius: 10px;
@@ -168,7 +168,7 @@
             align-items: center;
         }
 
-        /* 快速控制按钮区 */
+        /*  */
         .btn-group {
             display: flex;
             gap: 10px;
@@ -203,7 +203,7 @@
             color: #11111b;
         }
 
-        /* 核心 Kill/Stop 按钮设计 */
+        /*  Kill/Stop  */
         .btn-stop {
             flex: 1.2;
             background: var(--accent-red);
@@ -217,7 +217,7 @@
             box-shadow: 0 6px 16px rgba(243, 139, 168, 0.5);
         }
 
-        /* 模型选择 */
+        /*  */
         select {
             width: 100%;
             background: #181825;
@@ -229,7 +229,7 @@
             font-size: 0.9rem;
         }
 
-        /* 对话与指令交互 */
+        /*  */
         .chat-input-area {
             display: flex;
             gap: 8px;
@@ -257,7 +257,7 @@
             padding: 0 18px;
         }
 
-        /* 日志输出窗口 */
+        /*  */
         .log-box {
             background: #11111b;
             border: 1px solid #313244;
@@ -282,7 +282,7 @@
             color: #f9e2af;
             font-weight: bold;
         }
-        /* 屏幕上的点击动态光环指示器 */
+        /*  */
         .click-pointer {
             position: absolute;
             width: 36px;
@@ -311,7 +311,7 @@
             100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
         }
 
-        /* 画面正上方浮动的极速紧急关闭悬浮条 */
+        /*  */
         .floating-screen-stop {
             position: absolute;
             top: 25px;
@@ -375,7 +375,7 @@
             <div class="screen-tip">💡 Tip: When Keep-Alive is on, cursor smoothly orbits in gentle circles</div>
         </div>
 
-        <!-- 右侧交互面板 -->
+        <!--  -->
         <div class="control-panel">
             <!-- Emergency Control & Keep-Alive -->
             <div class="card">
@@ -439,25 +439,25 @@
 
         const PRESET_INFOS = {
             "openrouter_r1": {
-                "name": "OpenRouter: DeepSeek R1 (免费)",
+                "name": "OpenRouter: DeepSeek R1 (Free)",
                 "base_url": "https://openrouter.ai/api/v1",
                 "model": "deepseek/deepseek-r1:free",
                 "link": "https://openrouter.ai/keys"
             },
             "openrouter_gemini": {
-                "name": "OpenRouter: Gemini 2.0 Flash (免费)",
+                "name": "OpenRouter: Gemini 2.0 Flash (Free)",
                 "base_url": "https://openrouter.ai/api/v1",
                 "model": "google/gemini-2.0-flash-exp:free",
                 "link": "https://openrouter.ai/keys"
             },
             "groq_llama": {
-                "name": "Groq: Llama 3.3 70B (超高速/免费)",
+                "name": "Groq: Llama 3.3 70B (Fast/Free)",
                 "base_url": "https://api.groq.com/openai/v1",
                 "model": "llama-3.3-70b-versatile",
                 "link": "https://console.groq.com/keys"
             },
             "siliconflow": {
-                "name": "SiliconFlow: Qwen 2.5 7B (国内高速/免费)",
+                "name": "SiliconFlow: Qwen 2.5 7B (Free)",
                 "base_url": "https://api.siliconflow.cn/v1",
                 "model": "Qwen/Qwen2.5-7B-Instruct",
                 "link": "https://cloud.siliconflow.cn/account/ak"
@@ -482,9 +482,8 @@
             document.getElementById("cfg-model").value = p.model;
             const a = document.getElementById("cfg-key-link");
             a.href = p.link;
-            a.textContent = "🔗 获取 " + presetKey.split("_")[0] + " API Key";
+            a.textContent = "🔗 Get " + presetKey.split("_")[0] + " API Key";
             
-            // 如果已存在该模型，回显其已有 key
             if (customModelsCache[presetKey]) {
                 document.getElementById("cfg-key").value = customModelsCache[presetKey].api_key || "";
             }
@@ -503,7 +502,7 @@
             const model = document.getElementById("cfg-model").value.trim();
 
             if (!id || !name || !base_url || !model) {
-                alert("请填写完整的 ID、名称、Base URL 与 Model ID！");
+                alert("Please fill in ID, Name, Base URL, and Model ID!");
                 return;
             }
 
@@ -536,7 +535,7 @@
 
         function deleteCurrentModel() {
             const id = document.getElementById("cfg-id").value.trim();
-            if (!id || !confirm("确定要删除该模型配置吗？")) return;
+            if (!id || !confirm("Are you sure you want to delete this model configuration?")) return;
             delete customModelsCache[id];
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({ type: "delete_custom_model", id: id }));
@@ -557,7 +556,7 @@
                         <b style="color:#fab387;">${m.name || id}</b>
                         <span style="color:#a6adc8; margin-left:6px; font-size:0.75rem;">(${m.model})</span>
                     </div>
-                    <button type="button" onclick="editModel('${id}')" style="padding:2px 6px; font-size:0.7rem; background:#45475a; border-radius:4px; color:#fff; cursor:pointer;">编辑</button>
+                    <button type="button" onclick="editModel('${id}')" style="padding:2px 6px; font-size:0.7rem; background:#45475a; border-radius:4px; color:#fff; cursor:pointer;">Edit</button>
                 `;
                 container.appendChild(item);
             }
@@ -567,10 +566,10 @@
             const select = document.getElementById("model-select");
             const currVal = select.value;
             
-            // 保留默认选项
+            // Keep default options
             select.innerHTML = `
-                <option value="qwen">LM Studio 本地 (Qwen 7B Coder / 智能规划)</option>
-                <option value="gemini">Google Gemini 3.5 Flash (视觉多模态/官方API)</option>
+                <option value="qwen">LM Studio Local (Qwen 7B Coder / Planner)</option>
+                <option value="gemini">Google Gemini 3.5 Flash (Vision Multimodal)</option>
             `;
 
             for (const [id, m] of Object.entries(customModelsCache)) {
@@ -621,7 +620,7 @@ function connectWS() {
                     }
                 }
 
-                // 4. 同步自定义模型列表与当前模型
+                // 4. 
                 if (data.custom_models) {
                     const keysOld = Object.keys(customModelsCache).join(",");
                     const keysNew = Object.keys(data.custom_models).join(",");
@@ -634,7 +633,7 @@ function connectWS() {
                     modelSelect.value = data.active_model;
                 }
 
-                // 5. 实时渲染 MoveMyCursor 风格的鼠标光标位置
+                // 5.  MoveMyCursor 
                 const liveCursor = document.getElementById("live-cursor");
                 if (data.cursor && data.cursor.x !== undefined && data.cursor.y !== undefined) {
                     liveCursor.style.display = "block";
@@ -642,24 +641,24 @@ function connectWS() {
                     liveCursor.style.top = (data.cursor.y * 100).toFixed(2) + "%";
                 }
 
-                // 6. 渲染猫咪点击光环指示器
+                // 6. 
                 if (data.last_click && data.last_click.x !== undefined) {
                     showClickRipple(data.last_click.x, data.last_click.y);
                 }
 
-                // 7. 处理完成/中止全局通知
+                // 7. /
                 if (data.notification && data.notification.id) {
                     handleWebNotification(data.notification);
                 }
 
-                // 8. 处理 LLM 主动向用户提问的交互弹窗
+                // 8.  LLM 
                 if (data.pending_question && data.pending_question.id) {
                     handleWebQuestion(data.pending_question);
                 } else {
                     dismissWebQuestion();
                 }
 
-                // 9. 渲染日志
+                // 9. 
                 if (data.logs) {
                     logBox.innerHTML = "";
                     data.logs.forEach(msg => {
@@ -673,13 +672,13 @@ function connectWS() {
             };
         }
 
-        // Web 端弹出提示与音效
+        // Web 
         let lastNotificationId = null;
         function handleWebNotification(notif) {
             if (notif.id === lastNotificationId) return;
             lastNotificationId = notif.id;
 
-            // 播放 Web Audio API 提示音
+            //  Web Audio API 
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
@@ -700,7 +699,7 @@ function connectWS() {
                 osc.stop(ctx.currentTime + 0.36);
             } catch (e) {}
 
-            // 显示漂浮 Toast 横幅
+            //  Toast 
             const toast = document.createElement("div");
             const isStop = (notif.type === "stopped");
             toast.style.cssText = `
@@ -730,7 +729,7 @@ function connectWS() {
             }, 4500);
         }
 
-        // Web 端处理 LLM 疑问弹窗交互
+        // Web  LLM 
         let currentQuestionId = null;
         function handleWebQuestion(q) {
             if (q.id === currentQuestionId) return;
